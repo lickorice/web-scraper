@@ -1,25 +1,48 @@
-import urllib.request
+import requests
 from bs4 import BeautifulSoup
+from requests.exceptions import RequestException
+from contextlib import closing
+from requests.auth import HTTPProxyAuth
+
 
 def simple_get(url):
-    req = urllib.request.Request(url, headers={'User-Agent' : "Magic Browser"}) 
-    con = urllib.request.urlopen( req )
-    return con.read()
+    """
+    Attempts to get the content at `url` by making an HTTP GET request.
+    If the content-type of response is some kind of HTML/XML, return the
+    text content, otherwise return None.
+    """
+    
+    proxies = {"http":"95.216.1.195:80"}
+    auth = HTTPProxyAuth("lsbsyotq-1", "na52i8iu1f54")
+    headers = {
+        'user-agent': 'Mozilla/5.0',
+    }
+
+    try:
+        with closing(requests.get(url, stream=True, proxies=proxies, auth=auth, headers=headers)) as resp:
+                return resp.content
+
+    except RequestException as e:
+        print(e)
+        return None
 
 
 def fetch_data(url_str, i):
     html = BeautifulSoup(simple_get(url_str), 'html.parser')
-    _name = ' '.join(html.findAll("span", {"itemprop": "name"})[4].text.split())
-    _show = ' '.join(html.findAll("td", {"class": "name anime"})[0].text.split())
-    _gender = ' '.join(html.findAll("span", {"itemprop": "gender"})[0].text.split())
+    # print(html.prettify())
+    # print(html.findAll("span", {"style": "text-transform: lowercase;"})[0].text.split()[0].lower())
+    _name = ' '.join(html.select("h1 > a")[0].text.split())
+    _show = ' '.join(html.select('p > a[href^="source.php"]')[0].text.split())
+    _gender = html.findAll("span", {"style": "text-transform: lowercase;"})[0].text.split()[0].lower()
     print(i, '|', _name, '|', _show, '|', _gender)
+    # print(_name)
 
 
 def main():
     i = 1
     while True:
         try:
-            fetch_data("https://anidb.net/perl-bin/animedb.pl?show=character&charid={}".format(i), i)
+            fetch_data("http://www.animecharactersdatabase.com/characters.php?id={}".format(i), i)
         except IndexError:
             pass
         i += 1
