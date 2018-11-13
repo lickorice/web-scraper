@@ -12,14 +12,14 @@ def simple_get(url):
     text content, otherwise return None.
     """
     
-    proxies = {"http":"95.216.1.195:80"}
-    auth = HTTPProxyAuth("lsbsyotq-1", "na52i8iu1f54")
+    # proxies = {"http":"95.216.1.195:80"}
+    # auth = HTTPProxyAuth("lsbsyotq-1", "na52i8iu1f54")
     headers = {
         'user-agent': 'Mozilla/5.0',
     }
 
     try:
-        with closing(requests.get(url, stream=True, proxies=proxies, auth=auth, headers=headers)) as resp:
+        with closing(requests.get(url, stream=True, headers=headers)) as resp:
                 return resp.content
 
     except RequestException as e:
@@ -30,11 +30,12 @@ def simple_get(url):
 def fetch_data(url_str, i):
     html = BeautifulSoup(simple_get(url_str), 'html.parser')
     # print(html.prettify())
-    # print(html.findAll("span", {"style": "text-transform: lowercase;"})[0].text.split()[0].lower())
+    placeholder = html.select("p")[2].text.split()
+    _type = placeholder[placeholder.index("character")+3]
     _name = ' '.join(html.select("h1 > a")[0].text.split())
     _show = ' '.join(html.select('p > a[href^="source.php"]')[0].text.split())
     _gender = html.findAll("span", {"style": "text-transform: lowercase;"})[0].text.split()[0].lower()
-    print(i, '|', _name, '|', _show, '|', _gender)
+    print(i, '|', _name, '|', _show, '|', _gender, '|', _type)
     # print(_name)
 
 
@@ -42,7 +43,8 @@ def main():
     i = 1
     while True:
         try:
-            fetch_data("http://www.animecharactersdatabase.com/characters.php?id={}".format(i), i)
+            fetch_data("http://www.animecharactersdatabase.com/characters.php?id=57067", i)
+            break;
         except IndexError:
             pass
         i += 1
